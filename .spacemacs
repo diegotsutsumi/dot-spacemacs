@@ -32,26 +32,44 @@ This function should only modify configuration layer settings."
 
    ;; List of configuration layers to load.
    dotspacemacs-configuration-layers
-   '(
+   '(rust
+     yaml
+     plantuml
+     pdf
+     bibtex
+     latex
+     sql
+     csv
+     octave
+     javascript
+     ;; elixir
+     clojure
+     html
+     (python :variables python-formatter 'black)
+     ;; java
+     shell
+     (c-c++ :variables c-c++-enable-clang-support t)
      ;; ----------------------------------------------------------------
      ;; Example of useful layers you may want to use right away.
      ;; Uncomment some layer names and press `SPC f e R' (Vim style) or
      ;; `M-m f e R' (Emacs style) to install them.
      ;; ----------------------------------------------------------------
-     ;; auto-completion
-     ;; better-defaults
+     helm
+     auto-completion
      emacs-lisp
      git
-     helm
-     ;; lsp
-     ;; markdown
+     markdown
      multiple-cursors
-     ;; org
+     (org :variables
+          org-want-todo-bindings t
+          org-enable-reveal-js-support t
+          org-projectile-file "management.org"
+          )
      ;; (shell :variables
      ;;        shell-default-height 30
      ;;        shell-default-position 'bottom)
      ;; spell-checking
-     ;; syntax-checking
+     syntax-checking
      ;; version-control
      treemacs)
 
@@ -64,7 +82,11 @@ This function should only modify configuration layer settings."
    ;; `dotspacemacs/user-config'. To use a local version of a package, use the
    ;; `:location' property: '(your-package :location "~/path/to/your-package/")
    ;; Also include the dependencies as they will not be resolved automatically.
-   dotspacemacs-additional-packages '()
+   dotspacemacs-additional-packages '(yasnippet-snippets
+                                      ;; geben
+                                      ;; company-anaconda
+                                      ;; anaconda-mode
+                                      )
 
    ;; A list of packages that cannot be updated.
    dotspacemacs-frozen-packages '()
@@ -224,11 +246,11 @@ It should only modify the values of Spacemacs settings."
 
    ;; If non-nil, *scratch* buffer will be persistent. Things you write down in
    ;; *scratch* buffer will be saved and restored automatically.
-   dotspacemacs-scratch-buffer-persistent nil
+   dotspacemacs-scratch-buffer-persistent t
 
    ;; If non-nil, `kill-buffer' on *scratch* buffer
    ;; will bury it instead of killing.
-   dotspacemacs-scratch-buffer-unkillable nil
+   dotspacemacs-scratch-buffer-unkillable t
 
    ;; Initial message in the scratch buffer, such as "Welcome to Spacemacs!"
    ;; (default nil)
@@ -237,8 +259,9 @@ It should only modify the values of Spacemacs settings."
    ;; List of themes, the first of the list is loaded when spacemacs starts.
    ;; Press `SPC T n' to cycle to the next theme in the list (works great
    ;; with 2 themes variants, one dark and one light)
-   dotspacemacs-themes '(spacemacs-dark
-                         spacemacs-light)
+   ;; dotspacemacs-themes '(twilight
+   ;;                       spacemacs-dark
+   ;;                       spacemacs-light)
 
    ;; Set the theme for the Spaceline. Supported themes are `spacemacs',
    ;; `all-the-icons', `custom', `doom', `vim-powerline' and `vanilla'. The
@@ -257,9 +280,9 @@ It should only modify the values of Spacemacs settings."
    ;; a non-negative integer (pixel size), or a floating-point (point size).
    ;; Point size is recommended, because it's device independent. (default 10.0)
    dotspacemacs-default-font '("Source Code Pro"
-                               :size 10.0
+                               :size 13.0
                                :weight normal
-                               :width normal)
+                               :width normal) ;; prev versio used 'powerline-scale'
 
    ;; The leader key (default "SPC")
    dotspacemacs-leader-key "SPC"
@@ -302,7 +325,7 @@ It should only modify the values of Spacemacs settings."
 
    ;; If non-nil then the last auto saved layouts are resumed automatically upon
    ;; start. (default nil)
-   dotspacemacs-auto-resume-layouts nil
+   dotspacemacs-auto-resume-layouts t
 
    ;; If non-nil, auto-generate layout name when creating new layouts. Only has
    ;; effect when using the "jump to layout by number" commands. (default nil)
@@ -360,7 +383,7 @@ It should only modify the values of Spacemacs settings."
    ;; If non-nil the frame is maximized when Emacs starts up.
    ;; Takes effect only if `dotspacemacs-fullscreen-at-startup' is nil.
    ;; (default t) (Emacs 24.4+ only)
-   dotspacemacs-maximized-at-startup t
+   dotspacemacs-maximized-at-startup nil
 
    ;; If non-nil the frame is undecorated when Emacs starts up. Combine this
    ;; variable with `dotspacemacs-maximized-at-startup' to obtain fullscreen
@@ -551,8 +574,28 @@ This function is called immediately after `dotspacemacs/init', before layer
 configuration.
 It is mostly for variables that should be set before packages are loaded.
 If you are unsure, try setting them in `dotspacemacs/user-config' first."
-)
+  dotspacemacs-line-numbers '(:visual t
+                              :disabled-for-modes dired-mode
+                                                  doc-view-mode
+                                                  pdf-view-mode)
+  (setq-default dotspacemacs-line-numbers t)
+  (setq-default truncate-lines t)
+  (setq-default c-basic-offset 4)
+  (setq-default tab-width 4)
+  (setq-default diff-auto-refine-mode t)
+  (setq-default flycheck-flake8-maximum-line-length 88)
+  ;; (flycheck-add-next-checker 'python-flake8 'python-mypy t)
 
+  (with-eval-after-load 'org
+    (add-hook 'org-mode-hook 'org-indent-mode)
+    (setq org-todo-keywords '((sequence "TODO" "PROGRESS" "BLOCKED" "|" "DONE")))
+    (require 'org-projectile)
+    (mapcar '(lambda (file)
+               (when (file-exists-p file)
+                 (push file org-agenda-files)))
+            (org-projectile-todo-files))
+    )
+  )
 
 (defun dotspacemacs/user-load ()
   "Library to load while dumping.
@@ -568,8 +611,45 @@ This function is called at the very end of Spacemacs startup, after layer
 configuration.
 Put your configuration code here, except for variables that should be set
 before packages are loaded."
-)
-
+  (add-to-list 'exec-path "/usr/local/bin")
+  (add-hook 'doc-view-mode-hook 'auto-revert-mode)
+  (setq-default global-flycheck-mode t)
+  ;; (setq org-html-style-default "file:///home/tsutsumi/.config/org/org.css")
+  ;; (setq org-re-reveal-root "file:///home/tsutsumi/Downloads/reveal.js-4.1.0/")
+  (setq plantuml-default-exec-mode 'jar)
+  (setq plantuml-jar-path (expand-file-name "~/utils/plantuml.jar"))
+  (setq python-shell-interpreter "python3.11")
+  (setq python-shell-interpreter-args "")
+  (setq flycheck-python-pycompile-executable "python3.11")
+  (setq py-python-command "python3.11")
+  (setq auto-completion-enable-help-tooltip t)
+  (setq auto-completion-enable-snippets-in-popup t)
+  (setq auto-completion-enable-sort-by-usage t)
+  (setq spacemacs-default-jump-handlers
+        (remove 'evil-goto-definition spacemacs-default-jump-handlers))
+  (setq clojure-enable-fancify-symbols t)
+  (setq magit-diff-refine-hunk 'all)
+  )
 
 ;; Do not write anything past this comment. This is where Emacs will
 ;; auto-generate custom variable definitions.
+(defun dotspacemacs/emacs-custom-settings ()
+  "Emacs custom settings.
+This is an auto-generated function, do not modify its content directly, use
+Emacs customize menu instead.
+This function is called at the very end of Spacemacs initialization."
+(custom-set-variables
+ ;; custom-set-variables was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ '(org-agenda-files '("/home/tsutsumi/personal_finances/management.org"))
+ '(package-selected-packages
+   '(cargo counsel-gtags counsel swiper dap-mode lsp-docker lsp-treemacs bui lsp-mode flycheck-rust ggtags helm-gtags racer ron-mode rust-mode toml-mode tern company-statistics company-quickhelp pos-tip yasnippet-snippets yapfify yaml-mode xterm-color ws-butler writeroom-mode visual-fill-column winum web-mode web-beautify vterm volatile-highlights vi-tilde-fringe valign uuidgen unkillable-scratch undo-tree treemacs-projectile treemacs-persp treemacs-magit treemacs-icons-dired treemacs-evil treemacs-all-the-icons treemacs ht pfuture toc-org terminal-here tagedit symon symbol-overlay string-inflection sql-indent sphinx-doc spaceline-all-the-icons all-the-icons memoize spaceline powerline smeargle slim-mode shell-pop scss-mode sass-mode restart-emacs rainbow-delimiters pytest pyenv-mode py-isort pug-mode prettier-js popwin plantuml-mode pippel pipenv pyvenv pip-requirements phpunit phpcbf php-extras php-auto-yasnippets persp-mode persistent-scratch password-generator paradox spinner overseer orgit org-superstar org-rich-yank org-ref pdf-tools key-chord ivy tablist org-projectile org-category-capture org-present org-pomodoro alert log4e gntp org-mime org-download org-cliplink org-brain open-junk-file nodejs-repl nameless multi-term move-text mmm-mode markdown-toc magit-svn magit-section magit-gitflow magit-popup macrostep lorem-ipsum livid-mode skewer-mode live-py-mode link-hint json-navigator hierarchy json-mode json-snatcher json-reformat js2-refactor multiple-cursors js2-mode js-doc indent-guide importmagic epc ctable concurrent impatient-mode simple-httpd hungry-delete htmlize hl-todo highlight-parentheses highlight-numbers parent-mode highlight-indentation helm-xref helm-themes helm-swoop helm-rtags helm-pydoc helm-purpose window-purpose imenu-list helm-projectile helm-org-rifle helm-org helm-mode-manager helm-make helm-ls-git helm-gitignore helm-git-grep helm-flx helm-descbinds helm-css-scss helm-company helm-c-yasnippet helm-bibtex bibtex-completion biblio parsebib biblio-core helm-ag haml-mode google-translate google-c-style golden-ratio gnuplot gitignore-templates gitignore-mode gitconfig-mode gitattributes-mode git-timemachine git-messenger git-link gh-md geben fuzzy forge markdown-mode ghub closql emacsql-sqlite emacsql treepy flycheck-package package-lint flycheck flycheck-elsa flx-ido flx fancy-battery eyebrowse expand-region evil-visualstar evil-visual-mark-mode evil-unimpaired evil-tutor evil-textobj-line evil-surround evil-org evil-numbers evil-nerd-commenter evil-mc evil-matchit evil-magit magit git-commit with-editor transient evil-lisp-state evil-lion evil-indent-plus evil-iedit-state evil-goggles evil-exchange evil-escape evil-ediff evil-easymotion evil-cleverparens smartparens evil-args evil-anzu anzu eval-sexp-fu eshell-z eshell-prompt-extras esh-help emr iedit projectile paredit list-utils emmet-mode elisp-slime-nav editorconfig dumb-jump drupal-mode disaster dired-quick-sort devdocs define-word cython-mode csv-mode cpp-auto-include company-ycmd ycmd pkg-info request-deferred request deferred epl company-web web-completion-data company-rtags rtags company-reftex company-phpactor phpactor composer php-runtime company-php company-c-headers company-auctex company-anaconda company column-enforce-mode clean-aindent-mode clang-format centered-cursor-mode blacken auto-yasnippet auto-highlight-symbol auto-compile packed auctex-latexmk auctex anaconda-mode pythonic aggressive-indent ace-window ace-link ace-jump-helm-line helm avy helm-core ac-php yasnippet ac-php-core xcscope f php-mode dash s ac-ispell auto-complete popup which-key use-package pcre2el org-plus-contrib hydra lv hybrid-mode font-lock+ evil goto-chg dotenv-mode diminish bind-map bind-key async)))
+(custom-set-faces
+ ;; custom-set-faces was added by Custom.
+ ;; If you edit it by hand, you could mess it up, so be careful.
+ ;; Your init file should contain only one such instance.
+ ;; If there is more than one, they won't work right.
+ )
+)

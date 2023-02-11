@@ -63,6 +63,8 @@ This function should only modify configuration layer settings."
      (org :variables
           org-want-todo-bindings t
           org-enable-reveal-js-support t
+          org-enable-roam-support t
+          org-enable-roam-ui t
           org-projectile-file "management.org"
           )
      ;; (shell :variables
@@ -594,6 +596,8 @@ If you are unsure, try setting them in `dotspacemacs/user-config' first."
                (when (file-exists-p file)
                  (push file org-agenda-files)))
             (org-projectile-todo-files))
+    (setq org-projectile-capture-template "* TODO %^G\ncreated at: %T\nfile link: [[file://%F::%(concat (with-current-buffer (org-capture-get :original-buffer) (number-to-string (line-number-at-pos))))][%f]]")
+    (org-roam-db-autosync-mode)
     )
   )
 
